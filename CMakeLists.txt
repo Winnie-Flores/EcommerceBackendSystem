@@ -76,5 +76,8 @@ set_target_properties(${PROJECT_NAME} PROPERTIES
 add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
     COMMAND install_name_tool -change libssl.3.dylib ${OPENSSL_LIB_DIR}/libssl.3.dylib $<TARGET_FILE:${PROJECT_NAME}>
     COMMAND install_name_tool -change libcrypto.3.dylib ${OPENSSL_LIB_DIR}/libcrypto.3.dylib $<TARGET_FILE:${PROJECT_NAME}>
-    COMMENT "Fixing OpenSSL dylib paths for mysqlclient"
+    COMMAND ${CMAKE_COMMAND} -E copy_if_different
+        ${CMAKE_SOURCE_DIR}/style.qss
+        $<TARGET_FILE_DIR:${PROJECT_NAME}>/style.qss
+    COMMENT "Fixing OpenSSL dylib paths and copying QSS"
 )

@@ -6,6 +6,7 @@
 #include <QDir>
 #include <QStandardPaths>
 #include <QEventLoop>
+#include <QFile>
 #include "dbmanager.h"
 #include "login_dialog.h"
 #include "main_window.h"
@@ -16,18 +17,12 @@ int main(int argc, char* argv[]) {
     app.setOrganizationName("ECommerce");
     app.setApplicationName("ECommerce");
 
-    // 全局样式
-    app.setStyleSheet(
-        "QMainWindow { background-color: #ecf0f1; }"
-        "QLineEdit, QSpinBox, QDoubleSpinBox, QComboBox { "
-        "  border: 1px solid #bdc3c7; border-radius: 3px; padding: 4px 8px; background: white; }"
-        "QLineEdit:focus, QSpinBox:focus, QDoubleSpinBox:focus, QComboBox:focus { "
-        "  border-color: #3498db; }"
-        "QGroupBox { background: white; border-radius: 4px; padding: 15px; margin-top: 10px; }"
-        "QTableWidget { gridline-color: #ecf0f1; }"
-        "QHeaderView::section { background: #f8f9fa; padding: 6px; border: none; "
-        "  border-bottom: 2px solid #dee2e6; font-weight: bold; }"
-    );
+    // 全局样式：加载 Fluent 2 亚克力浅白主题 QSS
+    QFile styleFile(QCoreApplication::applicationDirPath() + "/style.qss");
+    if (styleFile.open(QFile::ReadOnly | QFile::Text)) {
+        app.setStyleSheet(styleFile.readAll());
+        styleFile.close();
+    }
 
     // 从配置文件读取数据库连接信息（保存在 build 目录下的 ecommerce.ini）
     QString configPath = QCoreApplication::applicationDirPath() + "/ecommerce.ini";

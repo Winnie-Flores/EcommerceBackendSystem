@@ -693,16 +693,18 @@ void OrderPage::onViewDetail() {
     QString createdAt = rowStr(row, "created_at");
     QString updatedAt = rowStr(row, "updated_at");
 
-    // 查询订单商品明细
+    // 查询订单商品明细（含供应商信息）
     auto items = db.query(
-        "SELECT oi.product_id, p.name, oi.quantity, oi.price "
+        "SELECT oi.product_id, p.name, oi.quantity, oi.price, s.name AS supplier_name "
         "FROM order_items oi JOIN products p ON oi.product_id=p.id "
+        "LEFT JOIN suppliers s ON p.supplier_id=s.id "
         "WHERE oi.order_id=" + std::to_string(selectedOrderId_));
 
     // 构建详情对话框
     QDialog dlg(this);
     dlg.setWindowTitle("订单详情 - " + orderNo);
-    dlg.resize(550, 450);
+    dlg.resize(780, 550);
+    dlg.setMinimumSize(620, 400);
 
     auto* dlgLayout = new QVBoxLayout(&dlg);
 
@@ -741,25 +743,32 @@ void OrderPage::onViewDetail() {
     auto* itemsLayout = new QVBoxLayout(itemsGroup);
 
     auto* itemsTable = new QTableWidget();
-    itemsTable->setColumnCount(4);
-    itemsTable->setHorizontalHeaderLabels({"商品ID", "商品名称", "数量", "单价"});
-    itemsTable->horizontalHeader()->setStretchLastSection(true);
+    itemsTable->setColumnCount(6);
+    itemsTable->setHorizontalHeaderLabels({"商品ID", "商品名称", "数量", "单价", "小计", "供应商"});
     itemsTable->horizontalHeader()->setSectionResizeMode(0, QHeaderView::ResizeToContents);
     itemsTable->horizontalHeader()->setSectionResizeMode(1, QHeaderView::Stretch);
     itemsTable->horizontalHeader()->setSectionResizeMode(2, QHeaderView::ResizeToContents);
+    itemsTable->horizontalHeader()->setSectionResizeMode(3, QHeaderView::ResizeToContents);
+    itemsTable->horizontalHeader()->setSectionResizeMode(4, QHeaderView::ResizeToContents);
+    itemsTable->horizontalHeader()->setSectionResizeMode(5, QHeaderView::ResizeToContents);
     itemsTable->setEditTriggers(QAbstractItemView::NoEditTriggers);
     itemsTable->setSelectionMode(QAbstractItemView::NoSelection);
     itemsTable->setAlternatingRowColors(true);
 
     itemsTable->setRowCount(static_cast<int>(items.size()));
     for (size_t i = 0; i < items.size(); ++i) {
+        int qty = rowInt(items[i], "quantity");
+        double price = rowDouble(items[i], "price");
+        QString supplier = rowStr(items[i], "supplier_name");
         itemsTable->setItem(static_cast<int>(i), 0, new QTableWidgetItem(QString::number(rowInt(items[i], "product_id"))));
         itemsTable->setItem(static_cast<int>(i), 1, new QTableWidgetItem(rowStr(items[i], "name")));
-        itemsTable->setItem(static_cast<int>(i), 2, new QTableWidgetItem(QString::number(rowInt(items[i], "quantity"))));
-        itemsTable->setItem(static_cast<int>(i), 3, new QTableWidgetItem(QString("¥%1").arg(rowDouble(items[i], "price"), 0, 'f', 2)));
+        itemsTable->setItem(static_cast<int>(i), 2, new QTableWidgetItem(QString::number(qty)));
+        itemsTable->setItem(static_cast<int>(i), 3, new QTableWidgetItem(QString("¥%1").arg(price, 0, 'f', 2)));
+        itemsTable->setItem(static_cast<int>(i), 4, new QTableWidgetItem(QString("¥%1").arg(qty * price, 0, 'f', 2)));
+        itemsTable->setItem(static_cast<int>(i), 5, new QTableWidgetItem(supplier.isEmpty() ? "—" : supplier));
     }
-    itemsTable->setMaximumHeight(static_cast<int>(items.size() + 1) * 30 + 5);
-    itemsLayout->addWidget(itemsTable);
+    itemsTable->setMinimumHeight(qMax(120, static_cast<int>(items.size() + 1) * 32));
+    itemsLayout->addWidget(itemsTable, 1);
 
     // 合计
     auto* totalLabel = new QLabel(QString("合计：¥%1 （共 %2 件商品）")
