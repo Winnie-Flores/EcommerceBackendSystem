@@ -1,0 +1,23 @@
+# Build artifacts
+build/
+*.o
+*.d
+*.cmake
+CMakeCache.txt
+CMakeFiles/
+Makefile
+cmake_install.cmake
+
+# IDE files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Generated reports (optional, uncomment to ignore)
+# *.docx
